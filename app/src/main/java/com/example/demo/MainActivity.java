@@ -9,15 +9,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
     private StorageReference mStorageRef;
@@ -26,12 +30,14 @@ public class MainActivity extends AppCompatActivity {
     Button upload;
     Uri imageUri;
     Button move;
+    ImageView image;
     private static final int iPick = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        image= findViewById(R.id.display);
         mStorageRef = FirebaseStorage.getInstance().getReference().child("Images/");
         ref = database.getReference("uploads");
         upload = findViewById(R.id.btnUpload);
@@ -67,10 +73,18 @@ public class MainActivity extends AppCompatActivity {
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
                             Toast.makeText(MainActivity.this,"Uploaded",Toast.LENGTH_LONG).show();
-                            UploadData upload = new UploadData(imageUri.getLastPathSegment(),mStorageRef.getDownloadUrl().toString());
-                            String uploadid = ref.push().getKey();
-                            ref.child(uploadid).setValue(upload);
+//                            UploadData upload = new UploadData(imageUri.getLastPathSegment(),taskSnapshot.getMetadata().getReference().getDownloadUrl().toString());
+//                            String uploadid = ref.push().getKey();
+//                            ref.child(uploadid).setValue(upload);
+                            Task<Uri> urlTask = taskSnapshot.getStorage().getDownloadUrl();
+                            while (!urlTask.isSuccessful());
+                            Uri downloadUrl = urlTask.getResult();
 
+                            //Log.d(TAG, "onSuccess: firebase download url: " + downloadUrl.toString()); //use if testing...don't need this line.
+                            UploadData upload = new UploadData(imageUri.getLastPathSegment(),downloadUrl.toString());
+                            String uploadId = ref.push().getKey();
+                            ref.child(uploadId).setValue(upload);
+                            Glide.with(MainActivity.this).load(imageUri).into(image);
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {

@@ -40,7 +40,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 .load(upload.mImageUri)
                 .placeholder(R.mipmap.ic_launcher)
                 .fit()
-                .centerCrop()
+               .centerInside()
                 .into(holder.image);
         holder.c.setOnClickListener(new View.OnClickListener() {
             @Override
